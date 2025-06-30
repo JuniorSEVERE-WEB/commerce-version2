@@ -1,0 +1,24 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>{{ listing.title }}</h2>
+    
+    {% if listing.image_url %}
+        <img src="{{ listing.image_url }}" alt="{{ listing.title }}" width="300">
+    {% endif %}
+    
+    <p><strong>Description :</strong> {{ listing.description }}</p>
+    <p><strong>Prix actuel :</strong> ${{ listing.current_price }}</p>
+    <p><strong>Vendeur :</strong> {{ listing.creator.username }}</p>
+    
+    {% if user.is_authenticated %}
+        <form action="{% url 'toggle_watchlist' listing.id %}" method="post">
+            {% csrf_token %}
+            {% if on_watchlist %}
+                <button type="submit" class="btn btn-danger">Retirer de ma Watchlist</button>
+            {% else %}
+                <button type="submit" class="btn btn-success">Ajouter à ma Watchlist</button>
+            {% endif %}
+        </form>
+    {% endif %}
+{% endblock %}
