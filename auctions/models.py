@@ -18,6 +18,7 @@ class Listing(models.Model):
     is_active = models.BooleanField(default=True)  # Enchère ouverte/fermée
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")  # Créateur
     watchers = models.ManyToManyField(User, blank=True, related_name="watchlist")  # Utilisateurs qui surveillent
+    winner = models.ForeignKey(User,  on_delete=models.SET_NULL, null=True, blank=True,   related_name="won_listings")
 
     def __str__(self):
         return f"{self.title} (${self.current_price})"

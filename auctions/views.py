@@ -15,15 +15,43 @@ def index(request):
         "listings": active_listings
     })
 
+
+
 def listing_detail(request, listing_id):
-    listing = get_object_or_404(Listing, pk=listing_id)
+    listing = get_object_or_404(Listing.objects.prefetch_related('bids__user'), pk=listing_id)
+    is_winner =   False
+    if not listing.is_active and   request.user.is_authenticated:
+        
+        is_winner = listing.winner       == request.user
+    #C'EST UN CODE POURL PARTIE 3, i believe in it
+    if request.method == 'POST' and 'close_auction' in request.POST:
+        if request.user == listing.creator:
+            if listing.bids.exists():
+
+                highest_bid = listing.bids.order_by('-amount').first()
+                listing.winner = highest_bid.user
+                messages.success(request, f"Auction closed! Winner : {highest_bid.user.username}")
+            else:
+
+                messages.warning(request, "No bids placed - auction  closed without winner.")
+            
+            listing.is_active = False
+            listing.save()
+
+
+
+            return redirect('listing_detail' , listing_id=listing.id)
+        else:
+            messages.error(request, "Only the creator can  close the auction.")
+
+
     
-    # Vérifie si l'user connecté a cette annonce dans sa watchlist
+
     on_watchlist = False
     if request.user.is_authenticated:
         on_watchlist = listing.watchers.filter(pk=request.user.pk).exists()
 
-
+    # kod sa gen pou modifye, c'est sur je vais le faire, i'll do it
     bid_error = None
     if request.method == "POST" and "place_bid" in request.POST:
         form = BidForm(request.POST)
@@ -41,23 +69,25 @@ def listing_detail(request, listing_id):
                 listing.current_price = new_bid.amount 
                 listing.save()
                 messages.success(request, "Your bid was placed successfully")
-                return redirect("listing_detail", listing_id=listing.id)
+                return redirect("listing_detail",  listing_id=listing.id)
     else:
         form = BidForm()
     return render(request, "auctions/listing_detail.html", {
         "listing": listing,
         "on_watchlist": on_watchlist,
         "bid_error": bid_error,
-        "form": form 
+        "form": form,
+        
+        'is_winner': is_winner,
     })
 def toggle_watchlist(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id)
     
     if request.user.is_authenticated:
         if listing.watchers.filter(pk=request.user.pk).exists():
-            listing.watchers.remove(request.user)  # Retire de la watchlist
+            listing.watchers.remove(request.user) 
         else:
-            listing.watchers.add(request.user)  # Ajoute à la watchlist
+            listing.watchers.add(request.user)  
     
     return HttpResponseRedirect(reverse("listing_detail", args=(listing_id,)))
 
@@ -82,12 +112,11 @@ def create_listing(request):
 def login_view(request):
     if request.method == "POST":
 
-        # Attempt to sign user in
+
         username = request.POST["username"]
         password = request.POST["password"]
         user = authenticate(request, username=username, password=password)
 
-        # Check if authentication successful
         if user is not None:
             login(request, user)
             return HttpResponseRedirect(reverse("index"))

@@ -2,20 +2,19 @@
 
 {% block body %}
     <div class="container mt-4">
-        <!-- kod sa yo gen pou modifye tou -->
         <div class="row">
             <div class="col-md-6">
-                {%  if listing.image_url   %}
-                    <img src="{{ listing.image_url  }}" alt="{{ listing.title  }}" class="img-fluid rounded mb-4" style="max-height: 400px;">
+                {% if listing.image_url %}
+                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}" class="img-fluid rounded mb-4" style="max-height: 400px;">
                 {% endif %}
             </div>
             
             <div class="col-md-6">
-                <h2 class="mb-3">{{  listing.title }}</h2>
+                <h2 class="mb-3">{{ listing.title }}</h2>
                 
                 <div class="mb-4">
                     <p><strong>Description :</strong></p>
-                    <p class="text-muted">{{  listing.description }}</p>
+                    <p class="text-muted">{{ listing.description }}</p>
                 </div>
                 
                 <div class="card mb-4">
@@ -24,10 +23,10 @@
                         <ul class="list-unstyled">
                             <li><strong>Prix actuel :</strong> <span class="text-primary">${{ listing.current_price }}</span></li>
                             <li><strong>Prix de départ :</strong> ${{ listing.starting_bid }}</li>
-                            <li><strong>Vendeur :</strong> {{  listing.creator.username }}</li>
+                            <li><strong>Vendeur :</strong> {{ listing.creator.username }}</li>
                             <li><strong>Statut : </strong> 
                                 <span class="badge {% if listing.is_active %}bg-success{% else %}bg-danger{% endif %}">
-                                    {% if listing.is_active  %}Active{% else %}Terminée {% endif %}
+                                    {% if listing.is_active %}Active{% else %}Terminée{% endif %}
                                 </span>
                             </li>
                         </ul>
@@ -35,24 +34,40 @@
                 </div>
                 
                 <!-- Watchlist -->
-                {% if user.is_authenticated  and listing.is_active %}
+                {% if user.is_authenticated and listing.is_active %}
                     <form action="{% url 'toggle_watchlist' listing.id %}" method="post" class="mb-4">
                         {% csrf_token %}
                         {% if on_watchlist %}
                             <button type="submit" class="btn btn-outline-danger">
-                                <i class="bi bi-bookmark-dash"></i>  Retirer de ma Watchlist
+                                <i class="bi bi-bookmark-dash"></i> Retirer de ma Watchlist
                             </button>
                         {% else %}
                             <button type="submit" class="btn btn-outline-success">
-                                <i class="bi bi-bookmark-plus"></i>  Ajouter à ma Watchlist
+                                <i class="bi bi-bookmark-plus"></i> Ajouter à ma Watchlist
                             </button>
                         {% endif %}
                     </form>
                 {% endif %}
+
+                <!-- Message de Gagnant -->
+                {% if not listing.is_active %}
+                    <div class="alert {% if is_winner %}alert-success{% else %}alert-info{% endif %} mb-4">
+                        {% if listing.winner %}
+                            {% if is_winner %}
+                                <h4><i class="bi bi-trophy"></i> Félicitations !</h4>
+                                <p>Vous avez remporté cette enchère !</p>
+                            {% else %}
+                                <strong>Enchère clôturée !</strong> Gagnant : {{ listing.winner.username }}
+                            {% endif %}
+                        {% else %}
+                            <strong>Enchère clôturée</strong> sans offres
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Section Enchères (Seulement si connecté et enchère active) -->
+        <!-- Section Enchères -->
         {% if user.is_authenticated and listing.is_active %}
             <div class="card mt-4">
                 <div class="card-header bg-primary text-white">
