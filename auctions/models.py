@@ -12,7 +12,7 @@ class Listing(models.Model):
     starting_bid = models.DecimalField(max_digits=10, decimal_places=2)  # Prix initial
     current_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Prix actuel
     #image = models.ImageField(upload_to='listing_images/', blank=True, null=True)  # Image uploadée
-    image_url = models.URLField(blank=True, null=True, verbose_name="Image URL")  # Champ pour une URL
+    image_url = models.CharField(blank=True, null=True, verbose_name="Image URL", max_length=500)  # Champ pour une URL
     category = models.CharField(max_length=50, blank=True)  # Catégorie (ex: "Électronique")
     is_active = models.BooleanField(default=True)  # Enchère ouverte/fermée
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")  # Créateur
