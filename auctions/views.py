@@ -3,9 +3,10 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from .forms import ListingForm
+from .forms import ListingForm, BidForm
 from .models import User, Listing
 from django.shortcuts import render, get_object_or_404
+from django.contrib import messages
 
 
 def index(request):
@@ -21,10 +22,33 @@ def listing_detail(request, listing_id):
     on_watchlist = False
     if request.user.is_authenticated:
         on_watchlist = listing.watchers.filter(pk=request.user.pk).exists()
-    
+
+
+    bid_error = None
+    if request.method == "POST" and "place_bid" in request.POST:
+        form = BidForm(request.POST)
+        if form.is_valid():
+            new_bid = form.save(commit=False)
+            new_bid.listing = listing 
+            new_bid.user = request.user 
+
+            if new_bid.amount < listing.starting_bid:
+                bid_error = "Bid must be at least as large as the starting price."
+            elif listing.bids.exists() and new_bid.amount <= listing.bids.first().amount:
+                bid_error = "Your bid must be higher the current highest bid."
+            else:
+                new_bid.save()
+                listing.current_price = new_bid.amount 
+                listing.save()
+                messages.success(request, "Your bid was placed successfully")
+                return redirect("listing_detail", listing_id=listing.id)
+    else:
+        form = BidForm()
     return render(request, "auctions/listing_detail.html", {
         "listing": listing,
-        "on_watchlist": on_watchlist
+        "on_watchlist": on_watchlist,
+        "bid_error": bid_error,
+        "form": form 
     })
 def toggle_watchlist(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id)

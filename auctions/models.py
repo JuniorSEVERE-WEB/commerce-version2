@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator
 
 # Modèle User (hérite de AbstractUser pour pouvoir l'étendre plus tard)
 class User(AbstractUser):
@@ -22,14 +23,22 @@ class Listing(models.Model):
         return f"{self.title} (${self.current_price})"
 
 # Modèle pour les offres
+from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 class Bid(models.Model):
-    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Montant de l'offre
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="bids")  # Annonce liée
-    bidder = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bids")  # Acheteur
-    date = models.DateTimeField(auto_now_add=True)  # Date de l'offre
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    listing = models.ForeignKey('Listing', on_delete=models.CASCADE, related_name='bids')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bids')  # <-- Ce champ doit exister
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.bidder.username} : ${self.amount} sur {self.listing.title}"
+        return f"{self.user.username} - ${self.amount}"
 
 # Modèle pour les commentaires
 class Comment(models.Model):

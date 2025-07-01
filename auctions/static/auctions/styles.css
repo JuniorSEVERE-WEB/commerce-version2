@@ -11,3 +11,14 @@ body {
     max-width: 100%;
     height: auto;
 }
+
+.bid-section {
+    border: 1px solid #eee;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.alert {
+    margin-top: 10px;
+}
