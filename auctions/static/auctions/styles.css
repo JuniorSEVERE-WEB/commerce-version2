@@ -40,3 +40,16 @@ body {
     vertical-align: middle;
     margin-right: 10px;
 }
+/* pATI KOMANT */
+.comment {
+    border-left: 3px solid #0d6efd;
+    padding-left: 10px;
+}
+/* watchlist */
+.card {
+    transition: transform 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}

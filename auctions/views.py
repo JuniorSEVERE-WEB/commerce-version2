@@ -3,10 +3,11 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from .forms import ListingForm, BidForm
+from .forms import ListingForm, BidForm, CommentForm
 from .models import User, Listing
 from django.shortcuts import render, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 
 def index(request):
@@ -19,9 +20,22 @@ def index(request):
 
 def listing_detail(request, listing_id):
     listing = get_object_or_404(Listing.objects.prefetch_related('bids__user'), pk=listing_id)
+    #sa se kod komant form
+    if request.method == 'POST' and 'add_comment' in request.POST:
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.listing = listing
+            comment.author = request.user
+            comment.save()
+            return redirect('listing_detail', listing_id=listing.id)
+    else:
+        form = CommentForm()
+
+
     is_winner =   False
     if not listing.is_active and   request.user.is_authenticated:
-        
+
         is_winner = listing.winner       == request.user
     #C'EST UN CODE POURL PARTIE 3, i believe in it
     if request.method == 'POST' and 'close_auction' in request.POST:
@@ -79,7 +93,18 @@ def listing_detail(request, listing_id):
         "form": form,
         
         'is_winner': is_winner,
+        "comment_form": form,
+        "comments": listing.comments.all()
     })
+#Si li sa pa bon, nap chanje l
+@login_required
+def watchlist(request):
+    watchlist_items = request.user.watchlist.all()
+    return render(request, "auctions/watchlist.html", {
+        "listings": watchlist_items
+    })
+
+
 def toggle_watchlist(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id)
     
@@ -91,19 +116,21 @@ def toggle_watchlist(request, listing_id):
     
     return HttpResponseRedirect(reverse("listing_detail", args=(listing_id,)))
 
-
+@login_required
 def create_listing(request):
     if request.method == "POST":
         form = ListingForm(request.POST)
         if form.is_valid():
-            listing = form.save(commit=False)
-            listing.creator = request.user 
-            listing.current_price = listing.starting_bid 
-
-            listing.save()
-            return redirect("index")
+            new_listing = form.save(commit=False)
+            new_listing.creator = request.user
+            new_listing.current_price = new_listing.starting_bid
+            new_listing.save()
+            return redirect('listing_detail', listing_id=new_listing.id)
         else:
-            form = ListingForm()
+            # Si le formulaire est invalide, on le réaffiche avec les erreurs
+            return render(request, 'auctions/create_listing.html', {'form': form})
+    else:
+        form = ListingForm()
         return render(request, "auctions/create_listing.html",{
             "form":form
         })    

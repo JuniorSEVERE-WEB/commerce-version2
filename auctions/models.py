@@ -47,6 +47,10 @@ class Comment(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="comments")  # Annonce liée
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")  # Auteur
     date = models.DateTimeField(auto_now_add=True)  # Date du commentaire
+    created_at = models.DateTimeField(auto_now_add=True) # kile kreye
+
+    class Meta:
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"Commentaire de {self.author.username} sur {self.listing.title}"

@@ -25,6 +25,9 @@
                             <li><strong>Prix de départ :</strong> ${{ listing.starting_bid }}</li>
                             <li><strong>Vendeur :</strong> {{ listing.creator.username }}</li>
                             <li><strong>Statut : </strong> 
+
+
+
                                 <span class="badge {% if listing.is_active %}bg-success{% else %}bg-danger{% endif %}">
                                     {% if listing.is_active %}Active{% else %}Terminée{% endif %}
                                 </span>
@@ -33,13 +36,15 @@
                     </div>
                 </div>
                 
-                <!-- Watchlist -->
+                <!-- sa se Watchlist -->
                 {% if user.is_authenticated and listing.is_active %}
                     <form action="{% url 'toggle_watchlist' listing.id %}" method="post" class="mb-4">
                         {% csrf_token %}
                         {% if on_watchlist %}
+
+
                             <button type="submit" class="btn btn-outline-danger">
-                                <i class="bi bi-bookmark-dash"></i> Retirer de ma Watchlist
+                                <i class="bi bi-bookmark-dash"></i>  Retirer de ma Watchlist
                             </button>
                         {% else %}
                             <button type="submit" class="btn btn-outline-success">
@@ -49,7 +54,7 @@
                     </form>
                 {% endif %}
 
-                <!-- Message de Gagnant -->
+                <!-- Message winner -->
                 {% if not listing.is_active %}
                     <div class="alert {% if is_winner %}alert-success{% else %}alert-info{% endif %} mb-4">
                         {% if listing.winner %}
@@ -60,18 +65,18 @@
                                 <strong>Enchère clôturée !</strong> Gagnant : {{ listing.winner.username }}
                             {% endif %}
                         {% else %}
-                            <strong>Enchère clôturée</strong> sans offres
+                            <strong>Enchère clôturée</strong> sans  offres
                         {% endif %}
                     </div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Section Enchères -->
+        <!-- Section Enchères en francais/English -->
         {% if user.is_authenticated and listing.is_active %}
             <div class="card mt-4">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Faire une Offre</h5>
+                    <h5 class="mb-0">Faire une Offre  </h5>
                 </div>
                 <div class="card-body">
                     {% if bid_error %}
@@ -96,17 +101,17 @@
                             <button type="submit" class="btn btn-primary">Envoyer l'Offre</button>
                         </div>
                         <small class="text-muted">
-                            Votre offre doit être supérieure à ${{ listing.current_price }}.
+                            Votre offre doit être supérieure   à ${{ listing.current_price }}.
                         </small>
                     </form>
                 </div>
             </div>
         {% endif %}
 
-        <!-- Historique des Offres -->
+        <!-- Istorik of/  -->
         <div class="card mt-4">
             <div class="card-header">
-                <h5 class="mb-0">Historique des Offres</h5>
+                <h5 class="mb-0">Historique des Offres   </h5>
             </div>
             <div class="card-body">
                 {% if listing.bids.all %}
@@ -124,6 +129,30 @@
                 {% else %}
                     <p class="text-muted">Aucune offre pour le moment.</p>
                 {% endif %}
+
+            <!--PATI KOMANTE-->
+                {% if user.is_authenticated %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="add_comment" value="true">
+                {{ comment_form.text }}
+                <button type="submit" class="btn btn-primary mt-2">Poster</button>
+            </form>
+                    <hr>
+                {% endif %}
+                
+                {% for comment in comments %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ comment.author.username }}</strong>
+                            <small class="text-muted">{{ comment.created_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <p class="mt-1">{{ comment.text }}</p>
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                {% empty %}
+                    <p class="text-muted">Aucun commentaire pour le moment.</p>
+                {% endfor %}
             </div>
         </div>
     </div>
